@@ -1,16 +1,17 @@
+mod component_state_manager;
 mod constants;
-mod price_reader;
-mod tycho_simulation;
+mod simulation_stream;
+mod simulation_stream_runner;
 mod util;
 
 use ::tycho_simulation::models::Token;
 use constants::{TYCHO_API_KEY, TYCHO_ETH_RPC_URL, TYCHO_UNICHAIN_RPC_URL};
 use num_bigint::BigUint;
-use price_reader::{PriceManager, PriceReader};
-use tracing::{error, info};
+use simulation_stream::TychoSimulation;
+use simulation_stream_runner::SimulationStreamRunner;
+use tracing::info;
 use tracing_subscriber::{EnvFilter, FmtSubscriber};
 use tycho_common::models::Chain;
-use tycho_simulation::TychoSimulation;
 
 #[tokio::main]
 async fn main() {
@@ -59,7 +60,7 @@ async fn main() {
     );
 
     info!("Creating eth tycho message processor");
-    let (eth_tycho_message_processor, eth_price_receiver) = TychoSimulation::new(
+    let eth_tycho_message_processor = TychoSimulation::new(
         TYCHO_ETH_RPC_URL.to_string(),
         TYCHO_API_KEY.to_string(),
         10.0,
@@ -70,8 +71,7 @@ async fn main() {
     );
 
     info!("Creating unichain tycho message processor");
-
-    let (unichain_tycho_message_processor, unichain_price_receiver) = TychoSimulation::new(
+    let unichain_tycho_message_processor = TychoSimulation::new(
         TYCHO_UNICHAIN_RPC_URL.to_string(),
         TYCHO_API_KEY.to_string(),
         10.0,
@@ -81,33 +81,23 @@ async fn main() {
         Chain::Unichain,
     );
 
-    info!("Starting eth tycho message processor");
-    let eth_tycho_message_processor_handle = tokio::spawn(eth_tycho_message_processor.run());
+    info!("Creating eth tycho message processor stream");
+    let eth_tycho_message_processor_stream =
+        eth_tycho_message_processor.create_stream().await.unwrap();
+    info!("Creating unichain tycho message processor stream");
+    let unichain_tycho_message_processor_stream = unichain_tycho_message_processor
+        .create_stream()
+        .await
+        .unwrap();
 
-    info!("Starting unichain tycho message processor");
-    let unichain_tycho_message_processor_handle =
-        tokio::spawn(unichain_tycho_message_processor.run());
+    info!("Creating simulation stream runner");
+    let simulation_stream_runner = SimulationStreamRunner::new(
+        eth_tycho_message_processor_stream,
+        unichain_tycho_message_processor_stream,
+    );
 
-    let eth_price_reader = PriceReader::new(eth_price_receiver, Chain::Ethereum);
-    let unichain_price_reader = PriceReader::new(unichain_price_receiver, Chain::Unichain);
+    info!("Running simulation stream runner");
+    let handle = tokio::spawn(simulation_stream_runner.run());
 
-    info!("Starting price manager");
-    let price_manager = PriceManager::new(eth_price_reader, unichain_price_reader);
-    let price_manager_handle = tokio::spawn(price_manager.run());
-
-    tokio::select! {
-        biased;
-        _ = eth_tycho_message_processor_handle => {
-            error!("Eth tycho message processor panicked");
-            return;
-        },
-        _ = unichain_tycho_message_processor_handle => {
-            error!("Unichain tycho message processor panicked");
-            return;
-        },
-        _ = price_manager_handle => {
-            error!("Price manager panicked");
-            return;
-        }
-    }
+    let _ = handle.await.unwrap();
 }
