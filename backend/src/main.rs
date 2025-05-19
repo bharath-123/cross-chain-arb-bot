@@ -3,7 +3,6 @@ mod constants;
 mod simulation_stream;
 mod simulation_stream_runner;
 mod util;
-mod component_info;
 
 use simulation_stream::TychoSimulation;
 use simulation_stream_runner::SimulationStreamRunner;

@@ -9,6 +9,15 @@ use crate::{
     component_state_manager::{ComponentState, ComponentStateManager},
     simulation_stream::TychoSimulationStreamInfo,
 };
+
+pub struct ArbOpportunity {
+    pub pool_id: String,
+    pub token1: String,
+    pub token2: String,
+    pub profit_percentage: f64,
+    pub block_number: u64,
+}
+
 pub struct SimulationStreamRunner {
     chain1_stream: TychoSimulationStreamInfo,
     chain2_stream: TychoSimulationStreamInfo,
