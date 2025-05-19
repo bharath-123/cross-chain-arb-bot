@@ -1,25 +1,29 @@
-use num_bigint::BigUint;
 use std::collections::HashMap;
 use tycho_common::models::Chain;
 
 #[derive(Debug, Clone)]
 pub struct ComponentState {
     spot_price: f64,
+    id: String,
 }
 
 impl ComponentState {
-    pub fn new(spot_price: f64) -> Self {
-        Self { spot_price }
+    pub fn new(spot_price: f64, id: String) -> Self {
+        Self { spot_price, id }
     }
 
     pub fn get_spot_price(&self) -> f64 {
         self.spot_price
     }
+
+    pub fn get_id(&self) -> &String {
+        &self.id
+    }
 }
 
 #[derive(Debug)]
 pub struct ComponentStateManager {
-    // component_id -> spot_price
+    // (chain, component_id) -> spot_price
     latest_state: HashMap<(Chain, String), ComponentState>,
 }
 

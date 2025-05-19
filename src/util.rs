@@ -28,11 +28,11 @@ pub fn register_exchanges(
                     tvl_filter.clone(),
                     Some(balancer_pool_filter),
                 )
-                .exchange::<EVMPoolState<PreCachedDB>>(
-                    "vm:curve",
-                    tvl_filter.clone(),
-                    Some(curve_pool_filter),
-                )
+                // .exchange::<EVMPoolState<PreCachedDB>>(
+                //     "vm:curve",
+                //     tvl_filter.clone(),
+                //     Some(curve_pool_filter),
+                // )
                 .exchange::<EkuboState>("ekubo_v2", tvl_filter.clone(), None)
                 .exchange::<UniswapV4State>(
                     "uniswap_v4",

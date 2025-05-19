@@ -3,23 +3,24 @@ mod constants;
 mod simulation_stream;
 mod simulation_stream_runner;
 mod util;
+mod component_info;
 
+use simulation_stream::TychoSimulation;
+use simulation_stream_runner::SimulationStreamRunner;
 use ::tycho_simulation::models::Token;
 use constants::{TYCHO_API_KEY, TYCHO_ETH_RPC_URL, TYCHO_UNICHAIN_RPC_URL};
 use num_bigint::BigUint;
-use simulation_stream::TychoSimulation;
-use simulation_stream_runner::SimulationStreamRunner;
 use tracing::info;
 use tracing_subscriber::{EnvFilter, FmtSubscriber};
 use tycho_common::models::Chain;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> anyhow::Result<()> {
     // Initialize tracing subscriber with pretty formatting
     FmtSubscriber::builder()
         .with_env_filter(
             EnvFilter::from_default_env()
-                .add_directive("tycho_cross_chain_arb_bot=info".parse().unwrap()),
+                .add_directive("tycho_cross_chain_arb_bot=debug".parse().unwrap()),
         )
         .with_target(false) // Don't include target in log output
         .with_level(true) // Include log level
@@ -99,5 +100,7 @@ async fn main() {
     info!("Running simulation stream runner");
     let handle = tokio::spawn(simulation_stream_runner.run());
 
-    let _ = handle.await.unwrap();
+    let _ = handle.await?;
+
+    Ok(())
 }

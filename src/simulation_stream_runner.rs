@@ -9,7 +9,6 @@ use crate::{
     component_state_manager::{ComponentState, ComponentStateManager},
     simulation_stream::TychoSimulationStreamInfo,
 };
-
 pub struct SimulationStreamRunner {
     chain1_stream: TychoSimulationStreamInfo,
     chain2_stream: TychoSimulationStreamInfo,
@@ -94,7 +93,7 @@ fn process_block_update(
             component_state_manager.update_component_state(
                 chain.clone(),
                 pool_id.clone(),
-                ComponentState::new(price),
+                ComponentState::new(price, pool_id.clone()),
             );
 
             info!("Checking for arb opportunities on {:?}", other_chain);
